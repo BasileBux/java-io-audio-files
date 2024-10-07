@@ -1,5 +1,13 @@
-# Java IOs - Practical content template
+# Java IOs - Practical - Audio files management
+The goal of this project is to manipulate audio file through a CLI 
 
-This repository contains the template to the
-[Java IOs](https://github.com/heig-vd-dai-course/heig-vd-dai-course/tree/main/05-java-ios)
-practical content.
+The main features are 
+- more or less sound volume
+- speedup or slowdown track
+
+over the whole track
+
+Here are some idea if more time
+- apply the features over only a part of the track
+
+
