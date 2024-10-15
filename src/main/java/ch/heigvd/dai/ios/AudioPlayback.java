@@ -13,15 +13,12 @@ public class AudioPlayback implements Playable {
     @Override
     public void play(String filename) {
 
-
-
-
-        try (InputStream audioSrc = getClass().getResourceAsStream(filename);
+        try (InputStream audioSrc = new FileInputStream(filename);
              InputStream bufferedAudioSrc = new BufferedInputStream(audioSrc);
-             AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc)){
+             AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc)) {
 
             playSound(ais);
-            //AudioInputStream audioInputStream = new AudioInputStream(s, WAVE, 256);
+
         } catch (Exception e) {
             System.out.println("error to open audio input : " + e.getMessage());
         }
@@ -31,18 +28,25 @@ public class AudioPlayback implements Playable {
 
     /**
      * Classe qui joue un son depuis un fichier ouvert en AudioInputStram
-     * from https://stackoverflow.com/questions/35051956/intellij-feature-not-supported-at-this-language-level-i-cant-compile
      * @param ais
      */
     private void playSound(AudioInputStream ais) {
-        try {
-            Clip clip = AudioSystem.getClip();
+        try(Clip clip = AudioSystem.getClip()){
+
             clip.open(ais);
+            clip.setFramePosition(0);
             clip.start();
+
+            // First loop : wait the audio start playing
+            //second loop : keep the sound playing while it's running
+            // with help of chatgpt
+            while (!clip.isRunning())
+                Thread.sleep(10);
+            while (clip.isRunning())
+                Thread.sleep(10);
         } catch(Exception ex) {
             System.out.println("Error with playing sound.");
             ex.printStackTrace();
         }
     }
-
 }
