@@ -15,15 +15,19 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 
-// Solution from: https://stackoverflow.com/a/5762444
 public class AudioChangeSpeed implements SpeedModifiable {
 
     @Override
-    public void changeSpeed(String filename, float intensity) {
+    public void changeSpeed(String inputFilename, float intensity) {
         System.out.println("Playback Rate: " + intensity);
 
-        // open file
-        try (InputStream audioSrc = new FileInputStream(filename); InputStream bufferedAudioSrc = new BufferedInputStream(audioSrc); AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc);) {
+        // Determine the output filename
+        String outputFilename = getOutputFilename(inputFilename, intensity);
+
+        // open input file
+        try (InputStream audioSrc = new FileInputStream(inputFilename);
+             InputStream bufferedAudioSrc = new BufferedInputStream(audioSrc);
+             AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc)) {
             AudioFormat af = ais.getFormat();
 
             int frameSize = af.getFrameSize();
@@ -40,18 +44,17 @@ public class AudioChangeSpeed implements SpeedModifiable {
             System.out.println("End entire: \t" + new Date());
 
             byte[] b1 = baos.toByteArray();
-            byte[] b2 = new byte[b1.length / (int) intensity];
-            for (int ii = 0; ii < b2.length / frameSize; ii++) {
+            int newLength = (int) (b1.length / intensity);
+            byte[] b2 = new byte[newLength];
+            for (int ii = 0; ii < newLength / frameSize; ii++) {
                 for (int jj = 0; jj < frameSize; jj++) {
-                    b2[(ii * frameSize) + jj] = b1[(ii * frameSize * (int) intensity) + jj];
+                    b2[(ii * frameSize) + jj] = b1[(int) (ii * frameSize * intensity) + jj];
                 }
             }
             System.out.println("End sub-sample: \t" + new Date());
 
             ByteArrayInputStream bais = new ByteArrayInputStream(b2);
             AudioInputStream aisAccelerated = new AudioInputStream(bais, af, b2.length);
-
-            String outputFilename = getOutputFilename(filename, intensity);
 
             // save the modified audio to a file
             try (OutputStream outputStream = new FileOutputStream(outputFilename)) {
