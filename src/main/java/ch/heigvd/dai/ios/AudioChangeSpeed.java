@@ -4,14 +4,16 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.util.Date;
 
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.swing.JOptionPane;
 
 // Solution from: https://stackoverflow.com/a/5762444
 public class AudioChangeSpeed implements SpeedModifiable {
@@ -38,27 +40,34 @@ public class AudioChangeSpeed implements SpeedModifiable {
             System.out.println("End entire: \t" + new Date());
 
             byte[] b1 = baos.toByteArray();
-            byte[] b2 = new byte[b1.length / (int)intensity];
+            byte[] b2 = new byte[b1.length / (int) intensity];
             for (int ii = 0; ii < b2.length / frameSize; ii++) {
                 for (int jj = 0; jj < frameSize; jj++) {
-                    b2[(ii * frameSize) + jj] = b1[(ii * frameSize * (int)intensity) + jj];
+                    b2[(ii * frameSize) + jj] = b1[(ii * frameSize * (int) intensity) + jj];
                 }
             }
             System.out.println("End sub-sample: \t" + new Date());
 
             ByteArrayInputStream bais = new ByteArrayInputStream(b2);
-            AudioInputStream aisAccelerated
-                    = new AudioInputStream(bais, af, b2.length);
-            Clip clip = AudioSystem.getClip();
-            clip.open(aisAccelerated);
-            clip.loop(2 * (int)intensity);
-            clip.start();
+            AudioInputStream aisAccelerated = new AudioInputStream(bais, af, b2.length);
 
-            JOptionPane.showMessageDialog(null, "Exit?");
+            String outputFilename = getOutputFilename(filename, intensity);
+
+            // save the modified audio to a file
+            try (OutputStream outputStream = new FileOutputStream(outputFilename)) {
+                AudioSystem.write(aisAccelerated, AudioFileFormat.Type.WAVE, outputStream);
+            }
 
         } catch (Exception e) {
             System.out.println("error to open audio input : " + e.getMessage());
         }
+    }
 
+    private String getOutputFilename(String inputFilename, float intensity) {
+        String filename = Paths.get(inputFilename).getFileName().toString();
+        int extensionIndex = filename.lastIndexOf(".");
+        String fileExtension = filename.substring(extensionIndex);
+        String fileNameWithoutExtension = filename.substring(0, extensionIndex);
+        return fileNameWithoutExtension + "_x" + intensity + fileExtension;
     }
 }
