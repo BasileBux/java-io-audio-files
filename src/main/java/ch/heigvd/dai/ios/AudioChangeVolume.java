@@ -18,8 +18,9 @@ public class AudioChangeVolume implements VolumeModifiable {
 
     @Override
     public void changeVolume(String filename, float volumeIntensity) {
+        //todo : plutot faire une erreur via la CLI !
         // Ensure volumeIntensity is between 0 and 1
-        volumeIntensity = Math.max(0, Math.min(1, volumeIntensity));
+        //volumeIntensity = Math.max(0, volumeIntensity);
 
         try (InputStream audioSrc = new FileInputStream(filename);
              InputStream bufferedAudioSrc = new BufferedInputStream(audioSrc);
@@ -27,6 +28,7 @@ public class AudioChangeVolume implements VolumeModifiable {
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
             AudioFormat format = ais.getFormat(); //todo : pourquoi j'ai besoin de ça ?
+
             processAudio(ais, baos, volumeIntensity);
             writeAdjustedAudio(baos, format, filename);
 
