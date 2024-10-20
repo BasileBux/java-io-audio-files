@@ -12,7 +12,7 @@ public class ChangeVolume implements Callable<Integer> {
 
     @CommandLine.Option(
       names = {"-i", "--intensity"},
-      description = "intensity of the modification",
+      description = "intensity of the modification (positive to increase, negative to decrease, zero will make no change)",
       required = true)
   protected float modificationIntensity;
 
