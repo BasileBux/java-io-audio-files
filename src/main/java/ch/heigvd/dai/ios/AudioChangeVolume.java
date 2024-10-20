@@ -13,7 +13,6 @@ public class AudioChangeVolume implements VolumeModifiable {
 
     @Override
     public void changeVolume(String filename, float volumeIntensity) {
-        //todo : manage volumeIntensity values through the CLI !
 
         try (InputStream audioSrc = new FileInputStream(filename);
              InputStream bufferedAudioSrc = new BufferedInputStream(audioSrc);
@@ -43,7 +42,7 @@ public class AudioChangeVolume implements VolumeModifiable {
 
                 //volumeIntensity of 1 will double the volume, -1 will reduce by half
                 int sign = volumeIntensity >= 0 ? 1 : -1;
-                sample = (short) (sample * (1+ Math.pow(Math.abs(volumeIntensity), sign)));
+                sample = (short) (sample * (Math.pow(Math.abs(volumeIntensity) + 1, sign)));
 
                 //Write the adjusted sample back to the buffer (use two index because of the 16-bit)
                 buffer[i] = (byte) (sample & 0xFF);
@@ -56,7 +55,7 @@ public class AudioChangeVolume implements VolumeModifiable {
 
     private void writeAdjustedAudio(ByteArrayOutputStream baos, AudioFormat format, String outputFilename ) throws IOException {
 
-        outputFilename += "_adjusted"; //TODO : write into a new file or overwrite ?
+        //outputFilename += "_adjusted"; //TODO : write into a new file or overwrite ?
 
         byte[] adjustedAudio = baos.toByteArray();
         File outputFile = new File(outputFilename); //TODO : is it ok to do so ?
