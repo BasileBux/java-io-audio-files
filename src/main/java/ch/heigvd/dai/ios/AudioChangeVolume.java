@@ -5,6 +5,7 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
+import java.nio.file.Paths;
 
 public class AudioChangeVolume implements VolumeModifiable {
 
@@ -22,7 +23,19 @@ public class AudioChangeVolume implements VolumeModifiable {
             AudioFormat format = ais.getFormat();
 
             processAudio(ais, baos, volumeIntensity);
-            writeAdjustedAudio(baos, format, filename);
+
+            String newOutputFilename = getOutputFilename(filename, volumeIntensity);
+
+            byte[] adjustedAudio = baos.toByteArray();
+            File outputFile = new File(newOutputFilename);
+
+            try ( ByteArrayInputStream bais = new ByteArrayInputStream(adjustedAudio);
+                  AudioInputStream adjustedAudioStream = new AudioInputStream(bais, format, adjustedAudio.length / format.getFrameSize())) {
+
+
+                AudioSystem.write(adjustedAudioStream, AudioFileFormat.Type.WAVE, outputFile);
+            }
+
 
             System.out.println("Audio adjusted...");
 
@@ -40,7 +53,7 @@ public class AudioChangeVolume implements VolumeModifiable {
 
                 short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8)); //adjust the sample into a 16-bit short
 
-                //volumeIntensity of 1 will double the volume, -1 will reduce by half
+                //volumeIntensity of 1 will double the volume, -1 will reduce it by half
                 int sign = volumeIntensity >= 0 ? 1 : -1;
                 sample = (short) (sample * (Math.pow(Math.abs(volumeIntensity) + 1, sign)));
 
@@ -53,18 +66,12 @@ public class AudioChangeVolume implements VolumeModifiable {
         }
     }
 
-    private void writeAdjustedAudio(ByteArrayOutputStream baos, AudioFormat format, String outputFilename ) throws IOException {
-
-        //outputFilename += "_adjusted"; //TODO : write into a new file or overwrite ?
-
-        byte[] adjustedAudio = baos.toByteArray();
-        File outputFile = new File(outputFilename); //TODO : is it ok to do so ?
-
-        try ( ByteArrayInputStream bais = new ByteArrayInputStream(adjustedAudio);
-              AudioInputStream adjustedAudioStream = new AudioInputStream(bais, format, adjustedAudio.length / format.getFrameSize())) {
-
-
-            AudioSystem.write(adjustedAudioStream, AudioFileFormat.Type.WAVE, outputFile);
-        }
+    // Written with help from chatGPT
+    private String getOutputFilename(String inputFilename, float intensity) {
+        String filename = Paths.get(inputFilename).getFileName().toString();
+        int extensionIndex = filename.lastIndexOf(".");
+        String fileExtension = filename.substring(extensionIndex);
+        String fileNameWithoutExtension = filename.substring(0, extensionIndex);
+        return fileNameWithoutExtension + "_at_" + intensity + "_volume" + fileExtension;
     }
 }
