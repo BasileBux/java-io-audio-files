@@ -18,6 +18,10 @@ public class AudioChangeSpeed implements SpeedModifiable {
 
     @Override
     public void changeSpeed(String inputFilename, float intensity) {
+        if (intensity < 0.0) {
+            System.out.println("Error: the intensity parameter should be positive.");
+            return;
+        }
         String outputFilename = getOutputFilename(inputFilename, intensity);
 
         // Solution modified: https://stackoverflow.com/a/5762444
