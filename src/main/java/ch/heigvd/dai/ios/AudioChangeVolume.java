@@ -37,13 +37,15 @@ public class AudioChangeVolume implements VolumeModifiable {
         int bytesRead;
 
         while ((bytesRead = ais.read(buffer)) != -1) { //read until there is no more data to read
-            for (int i = 0; i < bytesRead; i += 2) { //increase of two because we work with 16-bit audio (2 byte per sample)
+            for (int i = 0; i < bytesRead; i += 2) { //increase of two because we work with 16-bit audio (2 bytes per sample)
 
-                // adjust the sample into a 16-bit short
-                short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
-                sample = (short) (sample * volumeIntensity);
+                short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8)); //adjust the sample into a 16-bit short
 
-                // Write the adjusted sample back to the buffer (use two index because of the 16-bit)
+                //volumeIntensity of 1 will double the volume, -1 will reduce by half
+                int sign = volumeIntensity >= 0 ? 1 : -1;
+                sample = (short) (sample * (1+ Math.pow(Math.abs(volumeIntensity), sign)));
+
+                //Write the adjusted sample back to the buffer (use two index because of the 16-bit)
                 buffer[i] = (byte) (sample & 0xFF);
                 buffer[i + 1] = (byte) ((sample >> 8) & 0xFF);
             }
@@ -52,12 +54,16 @@ public class AudioChangeVolume implements VolumeModifiable {
         }
     }
 
-    private void writeAdjustedAudio(ByteArrayOutputStream baos, AudioFormat format, String outputFilename) throws IOException {
+    private void writeAdjustedAudio(ByteArrayOutputStream baos, AudioFormat format, String outputFilename ) throws IOException {
+
+        outputFilename += "_adjusted"; //TODO : write into a new file or overwrite ?
+
         byte[] adjustedAudio = baos.toByteArray();
         File outputFile = new File(outputFilename); //TODO : is it ok to do so ?
 
         try ( ByteArrayInputStream bais = new ByteArrayInputStream(adjustedAudio);
               AudioInputStream adjustedAudioStream = new AudioInputStream(bais, format, adjustedAudio.length / format.getFrameSize())) {
+
 
             AudioSystem.write(adjustedAudioStream, AudioFileFormat.Type.WAVE, outputFile);
         }
