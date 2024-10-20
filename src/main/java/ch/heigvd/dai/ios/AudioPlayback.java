@@ -7,9 +7,18 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+/**
+ * This class implements the Playable interface and provides functionality
+ * to play audio files.
+ */
 public class AudioPlayback implements Playable {
 
     @Override
+    /**
+     * Plays the audio file specified by the given filename.
+     *
+     * @param filename The path to the audio file to be played.
+     */
     public void play(String filename) {
 
         try (InputStream audioSrc = new FileInputStream(filename);
@@ -23,6 +32,11 @@ public class AudioPlayback implements Playable {
         }
     }
 
+    /**
+     * Plays the sound from the given AudioInputStream.
+     *
+     * @param ais The AudioInputStream to play.
+     */
     private void playSound(AudioInputStream ais) {
         try(Clip clip = AudioSystem.getClip()){
 
