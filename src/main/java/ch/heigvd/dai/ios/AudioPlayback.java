@@ -9,7 +9,6 @@ import java.io.InputStream;
 
 public class AudioPlayback implements Playable {
 
-
     @Override
     public void play(String filename) {
 
@@ -24,12 +23,6 @@ public class AudioPlayback implements Playable {
         }
     }
 
-
-
-    /**
-     * Classe qui joue un son depuis un fichier ouvert en AudioInputStram
-     * @param ais
-     */
     private void playSound(AudioInputStream ais) {
         try(Clip clip = AudioSystem.getClip()){
 
@@ -39,7 +32,7 @@ public class AudioPlayback implements Playable {
 
             // First loop : wait the audio start playing
             //second loop : keep the sound playing while it's running
-            // with help of chatgpt
+            // made with help of chatgpt
             while (!clip.isRunning())
                 Thread.sleep(10);
             while (clip.isRunning())
