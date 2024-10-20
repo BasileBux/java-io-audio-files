@@ -32,13 +32,13 @@ This will Play your audio file from your terminal.
 ```bash
 java -jar your_executable_path.jar your_audio_file.wav speed -i=1.5
 ```
-Intensity takes positive floating point values. In the example here, it will speed up the audio file by 1.5 times. This will output a file in your current directory which will be called `original_file_name_x1.5.wav` for this example. 
+Intensity takes positive floating point values. In the example here, it will speed up the audio file by 1.5 times. This will output a file in your current directory which will be called `original_file_name_x1.5.wav` for this example. Intensity values between 0 and 1 (0 and 1 non included), will slow down the audio. 
 
 **Volume**: 
 ```bash
 java -jar your_executable_path.jar your_audio_file.wav volume -i=2.7
 ```
-This will make the audio louder by 2.7 times. Intensity can take any floating point value. 
+This will make the audio louder by 2.7 times. Intensity can take any floating point value. This will output a file in your current directory which will be called `original_file_name_at_2.7_volume.wav` for this example. A negative intensity value, will make the audio quieter. 
 
 ## Contribute / Build from source
 First clone this repo on your machine and `cd` in the cloned folder: 
