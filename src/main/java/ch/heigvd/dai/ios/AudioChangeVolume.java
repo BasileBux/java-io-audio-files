@@ -7,12 +7,22 @@ import javax.sound.sampled.AudioSystem;
 import java.io.*;
 import java.nio.file.Paths;
 
+/**
+ * This class implements the VolumeModifiable interface and provides functionality
+ * to change the volume of an audio file.
+ */
 public class AudioChangeVolume implements VolumeModifiable {
 
     private static final int BUFFER_SIZE = 1024; // Buffer size for reading audio data
 
 
     @Override
+    /**
+     * Changes the volume of the specified audio file by the given intensity.
+     *
+     * @param filename The path to the input audio file.
+     * @param volumeIntensity The intensity of volume change. Positive values increase volume, negative values decrease it.
+     */
     public void changeVolume(String filename, float volumeIntensity) {
 
         try (InputStream audioSrc = new FileInputStream(filename);
@@ -47,6 +57,14 @@ public class AudioChangeVolume implements VolumeModifiable {
         }
     }
 
+    /**
+     * Processes the audio data, adjusting the volume based on the given intensity.
+     *
+     * @param ais The input AudioInputStream.
+     * @param baos The output ByteArrayOutputStream.
+     * @param volumeIntensity The intensity of volume change.
+     * @throws IOException If an I/O error occurs.
+     */
     private void processAudio(AudioInputStream ais, ByteArrayOutputStream baos, float volumeIntensity) throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
         int bytesRead;
@@ -70,6 +88,14 @@ public class AudioChangeVolume implements VolumeModifiable {
     }
 
     // Written with help from chatGPT
+
+    /**
+     * Generates a new output filename based on the input filename and volume intensity.
+     *
+     * @param inputFilename The original input filename.
+     * @param intensity The volume change intensity.
+     * @return A new filename with volume information appended.
+     */
     private String getOutputFilename(String inputFilename, float intensity) {
         String filename = Paths.get(inputFilename).getFileName().toString();
         int extensionIndex = filename.lastIndexOf(".");

@@ -14,9 +14,20 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 
+/**
+ * This class implements the SpeedModifiable interface and provides functionality
+ * to change the speed of an audio file.
+ */
 public class AudioChangeSpeed implements SpeedModifiable {
 
     @Override
+    /**
+     * Changes the speed of the specified audio file by the given intensity.
+     *
+     * @param inputFilename The path to the input audio file.
+     * @param intensity The intensity of speed change. Values greater than 1.0 speed up the audio,
+     *                  values between 0.0 and 1.0 slow it down.
+     */
     public void changeSpeed(String inputFilename, float intensity) {
         if (intensity < 0.0) {
             System.out.println("Error: the intensity parameter should be positive.");
@@ -102,6 +113,13 @@ public class AudioChangeSpeed implements SpeedModifiable {
     }
 
     // Written with help from chatGPT
+    /**
+     * Generates a new output filename based on the input filename and speed intensity.
+     *
+     * @param inputFilename The original input filename.
+     * @param intensity The speed change intensity.
+     * @return A new filename with speed information appended.
+     */
     private String getOutputFilename(String inputFilename, float intensity) {
         String filename = Paths.get(inputFilename).getFileName().toString();
         int extensionIndex = filename.lastIndexOf(".");
