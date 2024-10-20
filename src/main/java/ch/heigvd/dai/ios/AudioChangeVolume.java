@@ -1,15 +1,10 @@
 package ch.heigvd.dai.ios;
 
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.InputStream;
-
-//todo : corriger et prendre que ceux que j'ai besoin !
 import java.io.*;
-import javax.sound.sampled.*;
 
 public class AudioChangeVolume implements VolumeModifiable {
 
@@ -18,16 +13,14 @@ public class AudioChangeVolume implements VolumeModifiable {
 
     @Override
     public void changeVolume(String filename, float volumeIntensity) {
-        //todo : plutot faire une erreur via la CLI !
-        // Ensure volumeIntensity is between 0 and 1
-        //volumeIntensity = Math.max(0, volumeIntensity);
+        //todo : manage volumeIntensity values through the CLI !
 
         try (InputStream audioSrc = new FileInputStream(filename);
              InputStream bufferedAudioSrc = new BufferedInputStream(audioSrc);
              AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc);
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-            AudioFormat format = ais.getFormat(); //todo : pourquoi j'ai besoin de ça ?
+            AudioFormat format = ais.getFormat();
 
             processAudio(ais, baos, volumeIntensity);
             writeAdjustedAudio(baos, format, filename);
@@ -43,17 +36,14 @@ public class AudioChangeVolume implements VolumeModifiable {
         byte[] buffer = new byte[BUFFER_SIZE];
         int bytesRead;
 
-        while ((bytesRead = ais.read(buffer)) != -1) { //while not at the end of the file...
-            for (int i = 0; i < bytesRead; i += 2) { //qu'est ce qu'on fait là ?
+        while ((bytesRead = ais.read(buffer)) != -1) { //read until there is no more data to read
+            for (int i = 0; i < bytesRead; i += 2) { //increase of two because we work with 16-bit audio (2 byte per sample)
 
-                // Assuming 16-bit audio, adjust the sample
+                // adjust the sample into a 16-bit short
                 short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
                 sample = (short) (sample * volumeIntensity);
 
-                // Clip the sample if it exceeds the maximum or minimum values
-                //sample = (short) sample;
-
-                // Write the adjusted sample back to the buffer
+                // Write the adjusted sample back to the buffer (use two index because of the 16-bit)
                 buffer[i] = (byte) (sample & 0xFF);
                 buffer[i + 1] = (byte) ((sample >> 8) & 0xFF);
             }
@@ -64,7 +54,7 @@ public class AudioChangeVolume implements VolumeModifiable {
 
     private void writeAdjustedAudio(ByteArrayOutputStream baos, AudioFormat format, String outputFilename) throws IOException {
         byte[] adjustedAudio = baos.toByteArray();
-        File outputFile = new File(outputFilename); //todo : est-ce que c'est ok de faire comme ça ?
+        File outputFile = new File(outputFilename); //TODO : is it ok to do so ?
 
         try ( ByteArrayInputStream bais = new ByteArrayInputStream(adjustedAudio);
               AudioInputStream adjustedAudioStream = new AudioInputStream(bais, format, adjustedAudio.length / format.getFrameSize())) {
