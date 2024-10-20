@@ -20,7 +20,10 @@ public class AudioChangeVolume implements VolumeModifiable {
              AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc);
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
+            //format information
             AudioFormat format = ais.getFormat();
+            AudioFileFormat aff = AudioSystem.getAudioFileFormat(ais);
+            AudioFileFormat.Type fileType = aff.getType() ;
 
             processAudio(ais, baos, volumeIntensity);
 
@@ -33,7 +36,7 @@ public class AudioChangeVolume implements VolumeModifiable {
                   AudioInputStream adjustedAudioStream = new AudioInputStream(bais, format, adjustedAudio.length / format.getFrameSize())) {
 
 
-                AudioSystem.write(adjustedAudioStream, AudioFileFormat.Type.WAVE, outputFile);
+                AudioSystem.write(adjustedAudioStream, fileType, outputFile);
             }
 
 
