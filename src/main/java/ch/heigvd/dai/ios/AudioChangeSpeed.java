@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
-import java.util.Date;
 
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
@@ -19,53 +18,86 @@ public class AudioChangeSpeed implements SpeedModifiable {
 
     @Override
     public void changeSpeed(String inputFilename, float intensity) {
-        System.out.println("Playback Rate: " + intensity);
-
-        // Determine the output filename
         String outputFilename = getOutputFilename(inputFilename, intensity);
 
-        // open input file
-        try (InputStream audioSrc = new FileInputStream(inputFilename);
-             InputStream bufferedAudioSrc = new BufferedInputStream(audioSrc);
-             AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc)) {
-            AudioFormat af = ais.getFormat();
+        // Solution modified: https://stackoverflow.com/a/5762444
+        try (InputStream audioSrc = new FileInputStream(inputFilename); BufferedInputStream bufferedAudioSrc = new BufferedInputStream(audioSrc)) {
 
-            int frameSize = af.getFrameSize();
+            // Mark the stream with a large enough buffer size
+            bufferedAudioSrc.mark(Integer.MAX_VALUE);
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte[] b = new byte[2 ^ 16];
-            int read = 1;
-            while (read > -1) {
-                read = ais.read(b);
-                if (read > 0) {
+            // Read the format information
+            AudioFileFormat aff = AudioSystem.getAudioFileFormat(bufferedAudioSrc);
+            AudioFileFormat.Type fileType = aff.getType();
+
+            bufferedAudioSrc.reset();
+
+            // get the AudioInputStream
+            try (AudioInputStream ais = AudioSystem.getAudioInputStream(bufferedAudioSrc)) {
+                AudioFormat af = ais.getFormat();
+                int frameSize = af.getFrameSize();
+
+                // put audio file in a byte array (b)
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] b = new byte[2 ^ 16];
+                int read;
+                while ((read = ais.read(b)) > -1) {
                     baos.write(b, 0, read);
                 }
-            }
-            System.out.println("End entire: \t" + new Date());
 
-            byte[] b1 = baos.toByteArray();
-            int newLength = (int) (b1.length / intensity);
-            byte[] b2 = new byte[newLength];
-            for (int ii = 0; ii < newLength / frameSize; ii++) {
-                for (int jj = 0; jj < frameSize; jj++) {
-                    b2[(ii * frameSize) + jj] = b1[(int) (ii * frameSize * intensity) + jj];
+                byte[] b1 = baos.toByteArray();
+
+                // change speed by calculating the audio frames and filling a new byte array (b2)
+                byte[] b2;
+                if (intensity == 1.0) {
+                    System.out.println("No speed change needed.");
+                    return;
+                } else if (intensity > 1.0) {
+                    // speed up
+                    int newLength = (int) (b1.length / intensity);
+                    b2 = new byte[newLength];
+                    for (int ii = 0; ii < newLength / frameSize; ii++) {
+                        for (int jj = 0; jj < frameSize; jj++) {
+                            b2[(ii * frameSize) + jj] = b1[(int) (ii * frameSize * intensity) + jj];
+                        }
+                    }
+                } else {
+                    // slow down
+                    int newLength = (int) (b1.length / intensity);
+                    b2 = new byte[newLength];
+                    for (int ii = 0; ii < newLength / frameSize; ii++) {
+                        for (int jj = 0; jj < frameSize; jj++) {
+                            int origIndex = (int) (ii * frameSize * intensity) + jj;
+                            if (origIndex < b1.length) {
+                                b2[(ii * frameSize) + jj] = b1[origIndex];
+                            } else {
+                                b2[(ii * frameSize) + jj] = 0;
+                            }
+                        }
+                    }
                 }
-            }
-            System.out.println("End sub-sample: \t" + new Date());
 
-            ByteArrayInputStream bais = new ByteArrayInputStream(b2);
-            AudioInputStream aisAccelerated = new AudioInputStream(bais, af, b2.length);
+                ByteArrayInputStream bais = new ByteArrayInputStream(b2);
+                AudioInputStream aisAccelerated = new AudioInputStream(bais, af, b2.length);
 
-            // save the modified audio to a file
-            try (OutputStream outputStream = new FileOutputStream(outputFilename)) {
-                AudioSystem.write(aisAccelerated, AudioFileFormat.Type.WAVE, outputStream);
+                try (OutputStream outputStream = new FileOutputStream(outputFilename)) {
+                    /* Here we use the AudioSystem class to abstract the file writing because of the metadata. This could have been done manually. But for a purpose of time and complexity, we decided not to reinvent the wheel. */
+                    AudioSystem.write(aisAccelerated, fileType, outputStream);
+                } catch (Exception e) {
+                    System.out.println("error to write output file: " + e.getMessage());
+                }
+
+            } catch (Exception e) {
+                System.out.println("error to open audio input : " + e.getMessage());
             }
 
         } catch (Exception e) {
             System.out.println("error to open audio input : " + e.getMessage());
         }
+
     }
 
+    // Written with help from chatGPT
     private String getOutputFilename(String inputFilename, float intensity) {
         String filename = Paths.get(inputFilename).getFileName().toString();
         int extensionIndex = filename.lastIndexOf(".");
